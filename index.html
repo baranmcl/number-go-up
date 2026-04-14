@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>number-go-up</title>
+    <style>
+      html, body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        color: #fff;
+      }
+      #count {
+        font-size: 10rem;
+        font-weight: 800;
+        margin: 0 0 2rem 0;
+        line-height: 1;
+      }
+      #click {
+        font-size: 1.5rem;
+        font-weight: 700;
+        padding: 1rem 2.5rem;
+        border: none;
+        border-radius: 999px;
+        background: #e94560;
+        color: #fff;
+        cursor: pointer;
+      }
+      #reset {
+        margin-top: 1.25rem;
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="count">0</div>
+    <button id="click">Click me</button>
+    <button id="reset">Reset</button>
+    <script>
+      const countEl = document.getElementById("count");
+      const clickBtn = document.getElementById("click");
+      const resetBtn = document.getElementById("reset");
+
+      let count = 0;
+
+      function render() {
+        countEl.textContent = String(count);
+      }
+
+      clickBtn.addEventListener("click", () => {
+        count += 1;
+        render();
+      });
+
+      render();
+    </script>
+  </body>
+</html>
