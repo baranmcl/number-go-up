@@ -1,5 +1,7 @@
 # number-go-up
 
+![number-go-up screenshot](screenshot.png)
+
 A tiny single-page web app: type a name, click a button, watch the number go up. Built as a vibe-coding exercise.
 
 Each name is its own player with its own counter, all persisted in your browser's `localStorage`. A leaderboard on the right shows the top 10 players and always shows your row, even if you're not in the top 10. Hit Reset to remove your entry from the leaderboard and zero out your counter — other players are untouched.
