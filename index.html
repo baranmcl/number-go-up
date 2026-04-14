@@ -141,7 +141,7 @@
       }
       .leaderboard li {
         display: grid;
-        grid-template-columns: 2rem 1fr auto;
+        grid-template-columns: 2rem 0.65rem 1fr auto;
         align-items: baseline;
         gap: 0.5rem;
         padding: 0.5rem 0.6rem;
@@ -150,12 +150,44 @@
       }
       .leaderboard li + li { margin-top: 0.15rem; }
       .leaderboard .rank { color: rgba(255, 255, 255, 0.5); font-variant-numeric: tabular-nums; }
+      .leaderboard .dot {
+        width: 0.65rem;
+        height: 0.65rem;
+        border-radius: 50%;
+        background: var(--row-color, #e94560);
+        align-self: center;
+      }
       .leaderboard .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .leaderboard .score { font-weight: 700; font-variant-numeric: tabular-nums; }
       .leaderboard li.active {
-        background: rgba(233, 69, 96, 0.18);
-        border: 1px solid rgba(233, 69, 96, 0.5);
+        background: color-mix(in srgb, var(--row-color, #e94560) 18%, transparent);
+        border: 1px solid color-mix(in srgb, var(--row-color, #e94560) 55%, transparent);
         padding: calc(0.5rem - 1px) calc(0.6rem - 1px);
+      }
+      .swatches {
+        display: flex;
+        gap: 0.4rem;
+        margin: 0 0 0.85rem 0;
+      }
+      .swatch {
+        width: 1.1rem;
+        height: 1.1rem;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        padding: 0;
+        transition: transform 0.1s ease-out, border-color 0.15s ease-out;
+      }
+      .swatch:hover:not(:disabled) { transform: scale(1.15); }
+      .swatch.selected { border-color: #fff; }
+      .swatch:disabled { opacity: 0.35; cursor: not-allowed; }
+
+      .hint {
+        margin-top: 1rem;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.55);
+        font-style: italic;
+        min-height: 1.2em;
       }
       .leaderboard .empty {
         color: rgba(255, 255, 255, 0.45);
@@ -186,10 +218,12 @@
         <div id="count">0</div>
         <button id="click" disabled>Click me</button>
         <button id="reset" disabled>Reset</button>
+        <div class="hint" id="hint">Enter your name to begin</div>
       </section>
       <aside class="leaderboard-col">
         <div class="leaderboard">
           <h2>Leaderboard</h2>
+          <div class="swatches" id="swatches"></div>
           <ol id="board"></ol>
           <div class="empty" id="empty">No clicks yet</div>
         </div>
@@ -202,9 +236,25 @@
       const resetBtn = document.getElementById("reset");
       const boardEl = document.getElementById("board");
       const emptyEl = document.getElementById("empty");
+      const hintEl = document.getElementById("hint");
+      const swatchesEl = document.getElementById("swatches");
 
       const BOARD_KEY = "numberGoUp.leaderboard";
       const ACTIVE_KEY = "numberGoUp.activePlayer";
+
+      const COLORS = [
+        { id: "red",    hex: "#e94560" },
+        { id: "purple", hex: "#a06cd5" },
+        { id: "blue",   hex: "#4cc9f0" },
+        { id: "green",  hex: "#52d38a" },
+        { id: "gold",   hex: "#ffd166" },
+      ];
+      const DEFAULT_COLOR = "red";
+
+      function colorHex(id) {
+        const c = COLORS.find((x) => x.id === id);
+        return c ? c.hex : COLORS[0].hex;
+      }
 
       function loadBoard() {
         try {
@@ -244,8 +294,30 @@
       }
 
       function setEntry(name, count) {
-        board[name] = { count, lastActive: Date.now() };
+        const existing = board[name] || {};
+        board[name] = {
+          count,
+          lastActive: Date.now(),
+          color: existing.color || DEFAULT_COLOR,
+        };
         saveBoard(board);
+      }
+
+      function setColorForActive(colorId) {
+        const name = getActiveName();
+        if (!name) return;
+        const existing = board[name];
+        if (!existing) {
+          board[name] = { count: 0, lastActive: Date.now(), color: colorId };
+        } else {
+          existing.color = colorId;
+        }
+        saveBoard(board);
+      }
+
+      function colorFor(name) {
+        const entry = board[name];
+        return (entry && entry.color) || DEFAULT_COLOR;
       }
 
       function removeEntry(name) {
@@ -279,7 +351,8 @@
           .replace(/&/g, "&amp;")
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;");
-        return `<li class="${cls}"><span class="rank">${rank}</span><span class="name">${safeName}</span><span class="score">${entry.count}</span></li>`;
+        const hex = colorHex(colorFor(entry.name));
+        return `<li class="${cls}" style="--row-color: ${hex}"><span class="rank">${rank}</span><span class="dot"></span><span class="name">${safeName}</span><span class="score">${entry.count}</span></li>`;
       }
 
       function renderLeaderboard() {
@@ -314,7 +387,27 @@
         const hasName = getActiveName().length > 0;
         clickBtn.disabled = !hasName;
         resetBtn.disabled = !hasName;
+        hintEl.textContent = hasName ? "" : "Enter your name to begin";
       }
+
+      function renderSwatches() {
+        const hasName = getActiveName().length > 0;
+        const activeColor = hasName ? colorFor(getActiveName()) : null;
+        swatchesEl.innerHTML = COLORS.map((c) => {
+          const sel = c.id === activeColor ? "selected" : "";
+          const dis = hasName ? "" : "disabled";
+          return `<button type="button" class="swatch ${sel}" data-color="${c.id}" style="background:${c.hex}" ${dis} aria-label="${c.id}"></button>`;
+        }).join("");
+      }
+
+      swatchesEl.addEventListener("click", (e) => {
+        const btn = e.target.closest(".swatch");
+        if (!btn || btn.disabled) return;
+        const colorId = btn.dataset.color;
+        setColorForActive(colorId);
+        renderSwatches();
+        renderLeaderboard();
+      });
 
       function playAnimation(name) {
         countEl.classList.remove(name);
@@ -326,6 +419,7 @@
         saveActivePlayer(getActiveName());
         updateButtonsEnabled();
         renderCount();
+        renderSwatches();
         renderLeaderboard();
       });
 
@@ -352,6 +446,7 @@
       nameInput.value = loadActivePlayer();
       updateButtonsEnabled();
       renderCount();
+      renderSwatches();
       renderLeaderboard();
     </script>
   </body>
