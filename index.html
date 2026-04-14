@@ -11,13 +11,52 @@
       }
       body {
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
         font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
         background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
         color: #fff;
+        padding: 2rem;
+        box-sizing: border-box;
       }
+      .layout {
+        display: flex;
+        align-items: center;
+        gap: 3rem;
+        max-width: 1100px;
+        width: 100%;
+      }
+      .player-col {
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .leaderboard-col {
+        flex: 0 0 320px;
+      }
+      @media (max-width: 700px) {
+        body { align-items: flex-start; }
+        .layout { flex-direction: column; gap: 2rem; }
+        .leaderboard-col { flex: 1 1 auto; width: 100%; max-width: 360px; }
+      }
+
+      #name {
+        width: 100%;
+        max-width: 320px;
+        font-size: 1rem;
+        padding: 0.6rem 0.9rem;
+        margin-bottom: 1.5rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+        text-align: center;
+        outline: none;
+      }
+      #name::placeholder { color: rgba(255, 255, 255, 0.45); }
+      #name:focus { border-color: rgba(255, 255, 255, 0.55); }
+
       #count {
         font-size: 10rem;
         font-weight: 800;
@@ -30,9 +69,7 @@
         40%  { transform: scale(1.18); color: #ffd166; }
         100% { transform: scale(1);    color: #ffffff; }
       }
-      #count.pulse {
-        animation: pulse 0.35s ease-out;
-      }
+      #count.pulse { animation: pulse 0.35s ease-out; }
       @keyframes shake {
         0%, 100% { transform: translateX(0); }
         20%      { transform: translateX(-10px); }
@@ -40,9 +77,8 @@
         60%      { transform: translateX(-6px); }
         80%      { transform: translateX(6px); }
       }
-      #count.shake {
-        animation: shake 0.4s ease-in-out;
-      }
+      #count.shake { animation: shake 0.4s ease-in-out; }
+
       #click {
         font-size: 1.5rem;
         font-weight: 700;
@@ -52,6 +88,20 @@
         background: #e94560;
         color: #fff;
         cursor: pointer;
+        transition: transform 0.08s ease-out, background-color 0.15s ease-out, box-shadow 0.15s ease-out, opacity 0.15s ease-out;
+        box-shadow: 0 6px 20px rgba(233, 69, 96, 0.35);
+      }
+      #click:hover:not(:disabled) {
+        background: #ff5c77;
+        box-shadow: 0 8px 26px rgba(233, 69, 96, 0.5);
+      }
+      #click:active:not(:disabled) {
+        transform: translateY(2px) scale(0.98);
+        box-shadow: 0 3px 12px rgba(233, 69, 96, 0.35);
+      }
+      #click:disabled, #reset:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
       }
       #reset {
         margin-top: 1.25rem;
@@ -62,50 +112,208 @@
         background: transparent;
         color: rgba(255, 255, 255, 0.7);
         cursor: pointer;
+        transition: color 0.15s ease-out, border-color 0.15s ease-out, opacity 0.15s ease-out;
       }
-      #click {
-        transition: transform 0.08s ease-out, background-color 0.15s ease-out, box-shadow 0.15s ease-out;
-        box-shadow: 0 6px 20px rgba(233, 69, 96, 0.35);
-      }
-      #click:hover {
-        background: #ff5c77;
-        box-shadow: 0 8px 26px rgba(233, 69, 96, 0.5);
-      }
-      #click:active {
-        transform: translateY(2px) scale(0.98);
-        box-shadow: 0 3px 12px rgba(233, 69, 96, 0.35);
-      }
-      #reset:hover {
+      #reset:hover:not(:disabled) {
         color: #fff;
         border-color: rgba(255, 255, 255, 0.5);
+      }
+
+      .leaderboard {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 1rem;
+        padding: 1.25rem 1.25rem 1rem;
+        backdrop-filter: blur(4px);
+      }
+      .leaderboard h2 {
+        margin: 0 0 0.75rem 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .leaderboard ol {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .leaderboard li {
+        display: grid;
+        grid-template-columns: 2rem 1fr auto;
+        align-items: baseline;
+        gap: 0.5rem;
+        padding: 0.5rem 0.6rem;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+      }
+      .leaderboard li + li { margin-top: 0.15rem; }
+      .leaderboard .rank { color: rgba(255, 255, 255, 0.5); font-variant-numeric: tabular-nums; }
+      .leaderboard .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .leaderboard .score { font-weight: 700; font-variant-numeric: tabular-nums; }
+      .leaderboard li.active {
+        background: rgba(233, 69, 96, 0.18);
+        border: 1px solid rgba(233, 69, 96, 0.5);
+        padding: calc(0.5rem - 1px) calc(0.6rem - 1px);
+      }
+      .leaderboard .empty {
+        color: rgba(255, 255, 255, 0.45);
+        font-style: italic;
+        padding: 0.5rem 0.6rem;
+      }
+      .leaderboard .you-divider {
+        margin: 0.5rem 0 0.25rem;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.45);
+        padding: 0 0.6rem;
       }
     </style>
   </head>
   <body>
-    <div id="count">0</div>
-    <button id="click">Click me</button>
-    <button id="reset">Reset</button>
+    <main class="layout">
+      <section class="player-col">
+        <input
+          id="name"
+          type="text"
+          maxlength="15"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Your name"
+        />
+        <div id="count">0</div>
+        <button id="click" disabled>Click me</button>
+        <button id="reset" disabled>Reset</button>
+      </section>
+      <aside class="leaderboard-col">
+        <div class="leaderboard">
+          <h2>Leaderboard</h2>
+          <ol id="board"></ol>
+          <div class="empty" id="empty">No clicks yet</div>
+        </div>
+      </aside>
+    </main>
     <script>
+      const nameInput = document.getElementById("name");
       const countEl = document.getElementById("count");
       const clickBtn = document.getElementById("click");
       const resetBtn = document.getElementById("reset");
+      const boardEl = document.getElementById("board");
+      const emptyEl = document.getElementById("empty");
 
-      const STORAGE_KEY = "numberGoUp.count";
+      const BOARD_KEY = "numberGoUp.leaderboard";
+      const ACTIVE_KEY = "numberGoUp.activePlayer";
 
-      function loadCount() {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        const parsed = Number.parseInt(raw, 10);
-        return Number.isFinite(parsed) ? parsed : 0;
+      function loadBoard() {
+        try {
+          const raw = localStorage.getItem(BOARD_KEY);
+          if (!raw) return {};
+          const parsed = JSON.parse(raw);
+          return (parsed && typeof parsed === "object") ? parsed : {};
+        } catch {
+          return {};
+        }
       }
 
-      function saveCount() {
-        localStorage.setItem(STORAGE_KEY, String(count));
+      function saveBoard(board) {
+        localStorage.setItem(BOARD_KEY, JSON.stringify(board));
       }
 
-      let count = loadCount();
+      function loadActivePlayer() {
+        return localStorage.getItem(ACTIVE_KEY) || "";
+      }
 
-      function render() {
-        countEl.textContent = String(count);
+      function saveActivePlayer(name) {
+        if (name) {
+          localStorage.setItem(ACTIVE_KEY, name);
+        } else {
+          localStorage.removeItem(ACTIVE_KEY);
+        }
+      }
+
+      let board = loadBoard();
+
+      function getActiveName() {
+        return nameInput.value.trim();
+      }
+
+      function getEntry(name) {
+        return board[name] || null;
+      }
+
+      function setEntry(name, count) {
+        board[name] = { count, lastActive: Date.now() };
+        saveBoard(board);
+      }
+
+      function removeEntry(name) {
+        delete board[name];
+        saveBoard(board);
+      }
+
+      function currentCount() {
+        const name = getActiveName();
+        if (!name) return 0;
+        const entry = getEntry(name);
+        return entry ? entry.count : 0;
+      }
+
+      function renderCount() {
+        countEl.textContent = String(currentCount());
+      }
+
+      function sortedEntries() {
+        return Object.entries(board)
+          .map(([name, entry]) => ({ name, count: entry.count, lastActive: entry.lastActive || 0 }))
+          .sort((a, b) => {
+            if (b.count !== a.count) return b.count - a.count;
+            return b.lastActive - a.lastActive;
+          });
+      }
+
+      function rowHtml(rank, entry, isActive) {
+        const cls = isActive ? "active" : "";
+        const safeName = entry.name
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+        return `<li class="${cls}"><span class="rank">${rank}</span><span class="name">${safeName}</span><span class="score">${entry.count}</span></li>`;
+      }
+
+      function renderLeaderboard() {
+        const entries = sortedEntries();
+        const activeName = getActiveName();
+
+        if (entries.length === 0) {
+          boardEl.innerHTML = "";
+          emptyEl.style.display = "";
+          return;
+        }
+        emptyEl.style.display = "none";
+
+        const top = entries.slice(0, 10);
+        const activeInTop = activeName && top.some((e) => e.name === activeName);
+        const activeEntry = activeName ? entries.find((e) => e.name === activeName) : null;
+        const activeRank = activeEntry ? entries.findIndex((e) => e.name === activeName) + 1 : null;
+
+        let html = top
+          .map((entry, i) => rowHtml(i + 1, entry, entry.name === activeName))
+          .join("");
+
+        if (activeEntry && !activeInTop) {
+          html += `<li class="you-divider">You</li>`;
+          html += rowHtml(activeRank, activeEntry, true);
+        }
+
+        boardEl.innerHTML = html;
+      }
+
+      function updateButtonsEnabled() {
+        const hasName = getActiveName().length > 0;
+        clickBtn.disabled = !hasName;
+        resetBtn.disabled = !hasName;
       }
 
       function playAnimation(name) {
@@ -114,21 +322,37 @@
         countEl.classList.add(name);
       }
 
+      nameInput.addEventListener("input", () => {
+        saveActivePlayer(getActiveName());
+        updateButtonsEnabled();
+        renderCount();
+        renderLeaderboard();
+      });
+
       clickBtn.addEventListener("click", () => {
-        count += 1;
-        saveCount();
-        render();
+        const name = getActiveName();
+        if (!name) return;
+        const entry = getEntry(name);
+        const next = (entry ? entry.count : 0) + 1;
+        setEntry(name, next);
+        renderCount();
+        renderLeaderboard();
         playAnimation("pulse");
       });
 
       resetBtn.addEventListener("click", () => {
-        count = 0;
-        saveCount();
-        render();
+        const name = getActiveName();
+        if (!name) return;
+        removeEntry(name);
+        renderCount();
+        renderLeaderboard();
         playAnimation("shake");
       });
 
-      render();
+      nameInput.value = loadActivePlayer();
+      updateButtonsEnabled();
+      renderCount();
+      renderLeaderboard();
     </script>
   </body>
 </html>
