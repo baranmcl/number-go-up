@@ -1,0 +1,1171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Number Go Up &mdash; The Daily Gazette</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,600&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --paper:        #f1e6cc;
+        --paper-deep:   #e8dab9;
+        --paper-edge:   #d9c89f;
+        --ink:          #171108;
+        --ink-soft:     rgba(23, 17, 8, 0.72);
+        --ink-faint:    rgba(23, 17, 8, 0.40);
+        --ink-whisper:  rgba(23, 17, 8, 0.18);
+        --ink-breath:   rgba(23, 17, 8, 0.08);
+        --up:           #2a5a35;
+        --down:         #7d1f1c;
+        --row:          var(--down);
+        --serif:        "Fraunces", "Hoefler Text", Georgia, serif;
+        --display:      "Instrument Serif", "Fraunces", Georgia, serif;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; min-height: 100%; }
+
+      body {
+        font-family: var(--serif);
+        font-feature-settings: "onum" 1, "pnum" 1, "liga" 1, "dlig" 1;
+        color: var(--ink);
+        background:
+          radial-gradient(ellipse 120% 80% at 50% 0%, var(--paper) 0%, var(--paper-deep) 60%, var(--paper-edge) 100%) fixed;
+        padding: 2.5rem 2rem 3.5rem;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      /* Halftone dot texture over the whole page */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background-image:
+          radial-gradient(var(--ink-breath) 0.9px, transparent 1.1px),
+          radial-gradient(var(--ink-breath) 0.5px, transparent 0.8px);
+        background-size: 4px 4px, 7px 7px;
+        background-position: 0 0, 2px 3px;
+        opacity: 0.55;
+        mix-blend-mode: multiply;
+      }
+
+      /* Soft vignette like a scanned broadsheet */
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background:
+          radial-gradient(ellipse 140% 100% at 50% 50%, transparent 55%, rgba(70, 48, 18, 0.22) 100%);
+      }
+
+      .sheet {
+        position: relative;
+        z-index: 1;
+        max-width: 1240px;
+        margin: 0 auto;
+      }
+
+      /* ===== MASTHEAD ===== */
+      .masthead {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: end;
+        gap: 1.5rem;
+        padding-bottom: 0.6rem;
+        border-bottom: 1px solid var(--ink);
+      }
+      .masthead .meta-left,
+      .masthead .meta-right {
+        font-family: var(--serif);
+        font-weight: 500;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        color: var(--ink-soft);
+        line-height: 1.6;
+      }
+      .masthead .meta-right { text-align: right; }
+      .masthead .meta-left em,
+      .masthead .meta-right em {
+        font-style: italic;
+        font-weight: 400;
+        letter-spacing: 0.08em;
+        text-transform: none;
+        color: var(--ink-faint);
+      }
+
+      .nameplate {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: clamp(2.8rem, 8vw, 6.2rem);
+        line-height: 0.9;
+        letter-spacing: -0.01em;
+        text-align: center;
+        margin: 0;
+        white-space: nowrap;
+      }
+      .nameplate .amp {
+        font-style: italic;
+        font-family: var(--display);
+        color: var(--down);
+        padding: 0 0.05em;
+      }
+
+      .masthead-sub {
+        margin-top: 0.35rem;
+        text-align: center;
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 0.95rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+      .masthead-sub .orn { color: var(--down); font-style: normal; padding: 0 0.45em; }
+
+      .rule-double {
+        margin: 0.6rem 0 2.2rem;
+        height: 5px;
+        border: 0;
+        border-top: 1px solid var(--ink);
+        border-bottom: 1px solid var(--ink);
+      }
+
+      /* ===== LAYOUT ===== */
+      .layout {
+        display: grid;
+        grid-template-columns: 1.7fr 1px 1fr;
+        gap: 2.5rem;
+        align-items: start;
+      }
+      .col-divider {
+        background: var(--ink);
+        min-height: 520px;
+        width: 1px;
+        align-self: stretch;
+        opacity: 0.6;
+      }
+
+      /* ===== FEATURE (player column) ===== */
+      .feature { position: relative; padding: 0 0.5rem; }
+
+      .kicker {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-family: var(--serif);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.28em;
+        font-size: 0.7rem;
+        color: var(--down);
+        margin-bottom: 0.8rem;
+      }
+      .kicker::before,
+      .kicker::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--ink-faint);
+      }
+
+      .byline {
+        font-family: var(--display);
+        font-style: italic;
+        font-size: 1.35rem;
+        line-height: 1.25;
+        text-align: center;
+        color: var(--ink-soft);
+        margin: 0 auto 1.25rem;
+        max-width: 34ch;
+      }
+
+      .name-field {
+        display: flex;
+        justify-content: center;
+        align-items: baseline;
+        gap: 0.75rem;
+        margin: 0 auto 1.75rem;
+        max-width: 28rem;
+        padding: 0 0.25rem 0.5rem;
+        border-bottom: 1.5px solid var(--ink);
+      }
+      .name-field label {
+        font-family: var(--serif);
+        font-weight: 600;
+        font-size: 0.7rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        white-space: nowrap;
+      }
+      #name {
+        flex: 1;
+        border: none;
+        background: transparent;
+        outline: none;
+        font-family: var(--display);
+        font-size: 1.6rem;
+        color: var(--ink);
+        padding: 0.25rem 0;
+      }
+      #name::placeholder {
+        color: var(--ink-faint);
+        font-style: italic;
+      }
+
+      /* THE NUMBER */
+      .count-frame {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0 0 1.5rem;
+        padding: 0.5rem 0 1rem;
+      }
+      .count-frame::before,
+      .count-frame::after {
+        content: "";
+        position: absolute;
+        left: 10%;
+        right: 10%;
+        height: 3px;
+        border-top: 1px solid var(--ink);
+        border-bottom: 1px solid var(--ink);
+      }
+      .count-frame::before { top: 0; }
+      .count-frame::after { bottom: 0; }
+
+      .count-corner {
+        position: absolute;
+        top: -0.9rem;
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 0.85rem;
+        color: var(--ink-soft);
+        background: var(--paper);
+        padding: 0 0.6rem;
+      }
+      .count-corner.left { left: 8%; }
+      .count-corner.right { right: 8%; }
+
+      #count {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: clamp(6rem, 18vw, 14rem);
+        line-height: 0.92;
+        letter-spacing: -0.03em;
+        font-variant-numeric: lining-nums tabular-nums;
+        margin: 0.25rem 0 0.25rem;
+        color: var(--ink);
+        transition: transform 160ms ease, color 200ms ease;
+        position: relative;
+      }
+      #count .ornament {
+        display: inline-block;
+        font-family: var(--display);
+        font-style: italic;
+        font-size: 0.22em;
+        vertical-align: 0.9em;
+        color: var(--down);
+        margin: 0 0.15em;
+        letter-spacing: 0;
+      }
+
+      @keyframes stamp {
+        0%   { transform: scale(1) rotate(0);      color: var(--ink); }
+        35%  { transform: scale(1.085) rotate(-1.2deg); color: var(--up); }
+        55%  { transform: scale(1.04) rotate(0.6deg);   color: var(--up); }
+        100% { transform: scale(1) rotate(0);      color: var(--ink); }
+      }
+      #count.pulse { animation: stamp 420ms cubic-bezier(.2,.9,.25,1); }
+
+      @keyframes shred {
+        0%, 100% { transform: translateX(0) rotate(0); }
+        15%      { transform: translateX(-14px) rotate(-1.3deg); color: var(--down); }
+        35%      { transform: translateX(12px) rotate(0.9deg);   color: var(--down); }
+        55%      { transform: translateX(-8px) rotate(-0.6deg); }
+        75%      { transform: translateX(5px) rotate(0.3deg); }
+      }
+      #count.shake { animation: shred 520ms ease-in-out; }
+
+      .count-caption {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 0.85rem;
+        color: var(--ink-soft);
+        letter-spacing: 0.04em;
+      }
+      .count-caption .arrow { color: var(--up); font-style: normal; font-weight: 700; }
+
+      /* BUTTONS */
+      .actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.9rem;
+        margin-top: 0.5rem;
+      }
+
+      #click {
+        font-family: var(--serif);
+        font-weight: 700;
+        font-size: 0.9rem;
+        letter-spacing: 0.38em;
+        text-transform: uppercase;
+        padding: 1.05rem 3rem;
+        background: var(--ink);
+        color: var(--paper);
+        border: 2px solid var(--ink);
+        border-radius: 0;
+        cursor: pointer;
+        position: relative;
+        box-shadow: 6px 6px 0 var(--down);
+        transition: transform 90ms ease, box-shadow 90ms ease, background 160ms ease;
+      }
+      #click::before,
+      #click::after {
+        font-family: var(--display);
+        font-style: italic;
+        font-weight: 400;
+        font-size: 1.3rem;
+        letter-spacing: 0;
+        color: var(--paper);
+        position: relative;
+        top: 0.05em;
+      }
+      #click::before { content: "§"; margin-right: 0.9rem; }
+      #click::after  { content: "§"; margin-left: 0.9rem; }
+      #click:hover:not(:disabled) {
+        background: var(--up);
+        box-shadow: 4px 4px 0 var(--down);
+      }
+      #click:active:not(:disabled) {
+        transform: translate(4px, 4px);
+        box-shadow: 2px 2px 0 var(--down);
+      }
+      #click:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+        box-shadow: 6px 6px 0 var(--ink-faint);
+      }
+
+      #reset {
+        font-family: var(--serif);
+        font-style: italic;
+        font-weight: 600;
+        font-size: 0.78rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        padding: 0.3rem 0.5rem;
+        background: transparent;
+        color: var(--down);
+        border: none;
+        border-bottom: 1px solid var(--down);
+        cursor: pointer;
+        transition: color 160ms ease, border-color 160ms ease, opacity 160ms ease;
+      }
+      #reset:hover:not(:disabled) { color: var(--ink); border-color: var(--ink); }
+      #reset:disabled { opacity: 0.3; cursor: not-allowed; }
+
+      /* Insider tip — a scrap of paper slipped under the table */
+      #tip {
+        font-family: var(--display);
+        font-style: italic;
+        font-weight: 400;
+        font-size: 0.98rem;
+        letter-spacing: 0.02em;
+        text-transform: none;
+        padding: 0.35rem 1.1rem;
+        background:
+          repeating-linear-gradient(
+            135deg,
+            transparent 0 6px,
+            color-mix(in srgb, var(--ink) 6%, transparent) 6px 7px
+          ),
+          var(--paper);
+        color: var(--ink-soft);
+        border: 1px dashed var(--ink-faint);
+        border-radius: 0;
+        cursor: pointer;
+        position: relative;
+        transition: color 180ms ease, border-color 180ms ease, transform 140ms ease,
+                    background 180ms ease, letter-spacing 200ms ease;
+        box-shadow: 2px 2px 0 var(--ink-whisper);
+      }
+      #tip::before {
+        content: "§";
+        font-style: normal;
+        color: var(--down);
+        padding-right: 0.5rem;
+        font-weight: 600;
+      }
+      #tip:hover:not(:disabled) {
+        color: var(--down);
+        border-color: var(--down);
+        border-style: dashed;
+        letter-spacing: 0.035em;
+        transform: translateY(-1px) rotate(-0.3deg);
+      }
+      #tip:active:not(:disabled) {
+        transform: translate(1px, 2px) rotate(-0.3deg);
+        box-shadow: none;
+      }
+      #tip:disabled { opacity: 0.32; cursor: not-allowed; }
+
+      .hint {
+        margin-top: 1rem;
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 0.88rem;
+        color: var(--ink-faint);
+        min-height: 1.2em;
+        text-align: center;
+      }
+
+      /* ===== LEDGER (leaderboard) ===== */
+      .ledger { padding: 0 0.25rem; }
+
+      .ledger-hat {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 0.1rem;
+      }
+      .ledger h2 {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 2rem;
+        line-height: 1;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+      .ledger-hat .section {
+        font-family: var(--serif);
+        font-size: 0.68rem;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+      .ledger .deck {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 0.88rem;
+        color: var(--ink-soft);
+        margin: 0.2rem 0 0.9rem;
+        line-height: 1.35;
+      }
+
+      .rule-hair {
+        border: 0;
+        border-top: 1px solid var(--ink);
+        margin: 0 0 0.75rem;
+      }
+
+      /* Ink-pot color picker */
+      .inkwell-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        padding: 0.55rem 0 0.7rem;
+        border-bottom: 1px dashed var(--ink-faint);
+      }
+      .inkwell-label {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 0.78rem;
+        color: var(--ink-soft);
+        letter-spacing: 0.04em;
+      }
+      .swatches {
+        display: flex;
+        gap: 0.55rem;
+      }
+      .swatch {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 50%;
+        background: var(--c);
+        border: 1.5px solid var(--ink);
+        padding: 0;
+        cursor: pointer;
+        position: relative;
+        transition: transform 120ms ease;
+        box-shadow: inset 0 0 0 2px var(--paper), 1px 1.5px 0 var(--ink-faint);
+      }
+      .swatch:hover:not(:disabled) { transform: translateY(-2px); }
+      .swatch.selected {
+        box-shadow: inset 0 0 0 2px var(--paper), 1px 1.5px 0 var(--ink);
+        outline: 1.5px solid var(--ink);
+        outline-offset: 2px;
+      }
+      .swatch:disabled { opacity: 0.32; cursor: not-allowed; }
+
+      /* Leaderboard table */
+      .board-head {
+        display: grid;
+        grid-template-columns: 2.2rem 1fr auto;
+        gap: 0.75rem;
+        padding: 0 0.4rem 0.45rem;
+        font-family: var(--serif);
+        font-weight: 700;
+        font-size: 0.66rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        border-bottom: 1px solid var(--ink);
+      }
+      .board-head .col-score { text-align: right; }
+
+      .leaderboard ol {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .leaderboard li {
+        display: grid;
+        grid-template-columns: 2.2rem 0.6rem 1fr auto;
+        gap: 0.65rem;
+        align-items: baseline;
+        padding: 0.55rem 0.4rem;
+        border-bottom: 1px dotted var(--ink-faint);
+        font-size: 1.02rem;
+        position: relative;
+      }
+      .leaderboard li:last-child { border-bottom: none; }
+      .leaderboard .rank {
+        font-family: var(--display);
+        font-style: italic;
+        font-size: 1.05rem;
+        color: var(--ink-soft);
+        font-variant-numeric: oldstyle-nums tabular-nums;
+      }
+      .leaderboard .dot {
+        width: 0.6rem;
+        height: 0.6rem;
+        border-radius: 50%;
+        background: var(--row-color, var(--down));
+        border: 1px solid var(--ink);
+        align-self: center;
+      }
+      .leaderboard .name {
+        font-family: var(--serif);
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .leaderboard .score {
+        font-family: var(--serif);
+        font-weight: 700;
+        font-variant-numeric: lining-nums tabular-nums;
+      }
+
+      .leaderboard li.active {
+        background:
+          linear-gradient(
+            90deg,
+            color-mix(in srgb, var(--row-color, var(--down)) 14%, transparent) 0%,
+            color-mix(in srgb, var(--row-color, var(--down)) 6%, transparent) 100%
+          );
+        border-bottom: 1px solid var(--row-color, var(--down));
+      }
+      .leaderboard li.active::before {
+        content: "☞";
+        position: absolute;
+        left: -1.1rem;
+        top: 0.55rem;
+        color: var(--row-color, var(--down));
+        font-size: 0.95rem;
+      }
+      .leaderboard li.active .name {
+        font-style: italic;
+        font-weight: 600;
+      }
+
+      .you-divider {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 0.72rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        text-align: center;
+        color: var(--ink-soft);
+        padding: 0.85rem 0 0.4rem;
+        position: relative;
+        display: grid !important;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 0.8rem;
+        align-items: center;
+        border-bottom: none !important;
+      }
+      .you-divider::before,
+      .you-divider::after {
+        content: "";
+        height: 1px;
+        background: var(--ink-faint);
+      }
+
+      .empty {
+        padding: 1.25rem 0.4rem;
+        font-family: var(--serif);
+        font-style: italic;
+        color: var(--ink-faint);
+        text-align: center;
+      }
+
+      /* ===== TICKER ===== */
+      .ticker {
+        margin-top: 3rem;
+        border-top: 1px solid var(--ink);
+        border-bottom: 1px solid var(--ink);
+        padding: 0.55rem 0;
+        overflow: hidden;
+        position: relative;
+        background: var(--paper-deep);
+      }
+      .ticker-label {
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        display: flex;
+        align-items: center;
+        padding: 0 0.9rem;
+        background: var(--ink);
+        color: var(--paper);
+        font-family: var(--serif);
+        font-weight: 700;
+        font-size: 0.7rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        z-index: 2;
+      }
+      .ticker-track {
+        display: flex;
+        gap: 2.5rem;
+        white-space: nowrap;
+        padding-left: 9rem;
+        animation: roll 42s linear infinite;
+        will-change: transform;
+        font-family: var(--serif);
+        font-size: 0.95rem;
+        color: var(--ink-soft);
+      }
+      .ticker-item { display: inline-flex; align-items: baseline; gap: 0.5rem; }
+      .ticker-item .t-name {
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink);
+      }
+      .ticker-item .t-score { font-variant-numeric: lining-nums tabular-nums; font-weight: 700; }
+      .ticker-item .t-up { color: var(--up); font-weight: 700; }
+      .ticker-item .t-sep { color: var(--ink-faint); padding: 0 0.4rem; }
+      @keyframes roll {
+        from { transform: translateX(0); }
+        to   { transform: translateX(-50%); }
+      }
+
+      /* ===== FOOTER ===== */
+      .colophon {
+        margin-top: 1.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        font-family: var(--serif);
+        font-size: 0.72rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+      .colophon .orn {
+        font-family: var(--display);
+        font-style: italic;
+        font-size: 1.1rem;
+        color: var(--down);
+        letter-spacing: 0;
+      }
+
+      /* STOP PRESS flash (reused for tip verdicts) */
+      .stop-press {
+        position: fixed;
+        top: 14%;
+        left: 50%;
+        transform: translate(-50%, -20%) rotate(-4deg);
+        font-family: var(--display);
+        font-style: italic;
+        font-size: clamp(2rem, 5.5vw, 3.25rem);
+        color: var(--down);
+        background: var(--paper);
+        padding: 0.5rem 1.6rem;
+        border-top: 3px double var(--down);
+        border-bottom: 3px double var(--down);
+        letter-spacing: 0.04em;
+        text-align: center;
+        pointer-events: none;
+        opacity: 0;
+        z-index: 50;
+        max-width: 90vw;
+      }
+      .stop-press.variant-up    { color: var(--up);   border-color: var(--up); }
+      .stop-press.variant-down  { color: var(--down); border-color: var(--down); }
+      .stop-press .verdict-sub {
+        display: block;
+        margin-top: 0.15rem;
+        font-style: normal;
+        font-family: var(--serif);
+        font-size: 0.55em;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+      .stop-press.flash {
+        animation: stop-press-flash 1100ms ease-out;
+      }
+      @keyframes stop-press-flash {
+        0%   { opacity: 0; transform: translate(-50%, -10%) rotate(-4deg) scale(0.8); }
+        10%  { opacity: 1; transform: translate(-50%, -20%) rotate(-4deg) scale(1.05); }
+        80%  { opacity: 1; transform: translate(-50%, -20%) rotate(-4deg) scale(1); }
+        100% { opacity: 0; transform: translate(-50%, -28%) rotate(-4deg) scale(0.95); }
+      }
+
+      /* ===== RESPONSIVE ===== */
+      @media (max-width: 820px) {
+        body { padding: 1.5rem 1rem 2.5rem; }
+        .masthead { grid-template-columns: 1fr; gap: 0.4rem; }
+        .masthead .meta-right { text-align: left; }
+        .layout { grid-template-columns: 1fr; gap: 1.75rem; }
+        .col-divider { display: none; }
+        .nameplate { font-size: clamp(2.4rem, 12vw, 4rem); white-space: normal; }
+        #count { font-size: clamp(5.5rem, 26vw, 10rem); }
+        .ticker-track { padding-left: 6.5rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stop-press" id="stopPress">Stop&nbsp;Press!</div>
+
+    <div class="sheet">
+      <!-- ====== MASTHEAD ====== -->
+      <header class="masthead">
+        <div class="meta-left">
+          Vol. MMXXVI &nbsp;&middot;&nbsp; No. <span id="issueNo">001</span><br/>
+          <em>Est. this afternoon</em>
+        </div>
+        <h1 class="nameplate">Number <span class="amp">&amp;</span> Go Up</h1>
+        <div class="meta-right">
+          <span id="dateline">Sunday, 19 April 2026</span><br/>
+          <em>Price: your undivided attention</em>
+        </div>
+      </header>
+      <div class="masthead-sub">
+        <span>The Daily Gazette</span>
+        <span class="orn">&#x2767;</span>
+        <span>of Unwarranted Optimism</span>
+      </div>
+      <hr class="rule-double" />
+
+      <!-- ====== MAIN LAYOUT ====== -->
+      <main class="layout">
+        <!-- FEATURE -->
+        <section class="feature">
+          <div class="kicker">Front&nbsp;Page Story</div>
+          <p class="byline">
+            <em>In which our correspondent</em> petitions the universe, one decisive&nbsp;tap at a time.
+          </p>
+
+          <div class="name-field">
+            <label for="name">By&nbsp;&mdash;</label>
+            <input
+              id="name"
+              type="text"
+              maxlength="15"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="your correspondent's name"
+            />
+          </div>
+
+          <div class="count-frame">
+            <span class="count-corner left">Today's&nbsp;tally</span>
+            <span class="count-corner right">as&nbsp;of press</span>
+            <div id="count">0</div>
+            <div class="count-caption">
+              <span class="arrow">&#x25B2;</span> dispatches filed &middot; <em>rising, one trusts</em>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="click" disabled>Click&nbsp;Me</button>
+            <button id="tip" disabled title="Act on a rumor overheard at the club. Results may vary.">
+              Act on a whisper&hellip;
+            </button>
+            <button id="reset" disabled>&mdash;&nbsp;Issue a retraction&nbsp;&mdash;</button>
+            <div class="hint" id="hint">Kindly sign your column above to begin filing.</div>
+          </div>
+        </section>
+
+        <div class="col-divider" aria-hidden="true"></div>
+
+        <!-- LEDGER / LEADERBOARD -->
+        <aside class="ledger leaderboard">
+          <div class="ledger-hat">
+            <h2>The&nbsp;Ledger</h2>
+            <span class="section">Sec.&nbsp;B</span>
+          </div>
+          <p class="deck">
+            Closing figures for the afternoon, arranged in&nbsp;descending order of optimism.
+          </p>
+          <hr class="rule-hair" />
+
+          <div class="inkwell-row">
+            <span class="inkwell-label">Choose your&nbsp;ink:</span>
+            <div class="swatches" id="swatches"></div>
+          </div>
+
+          <div class="board-head">
+            <span>Rank</span>
+            <span>Correspondent</span>
+            <span class="col-score">Tally</span>
+          </div>
+          <ol id="board"></ol>
+          <div class="empty" id="empty">No tallies recorded. The press awaits.</div>
+        </aside>
+      </main>
+
+      <!-- ====== TICKER ====== -->
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker-label">Latest&nbsp;Prints</div>
+        <div class="ticker-track" id="ticker"></div>
+      </div>
+
+      <!-- ====== FOOTER ====== -->
+      <footer class="colophon">
+        <span>Set in Fraunces &amp; Instrument&nbsp;Serif</span>
+        <span class="orn">&#x274B;</span>
+        <span>Printed locally in your browser &middot; all&nbsp;tallies persist in&nbsp;<em>localStorage</em></span>
+      </footer>
+    </div>
+
+    <script>
+      const nameInput = document.getElementById("name");
+      const countEl = document.getElementById("count");
+      const clickBtn = document.getElementById("click");
+      const tipBtn = document.getElementById("tip");
+      const resetBtn = document.getElementById("reset");
+      const boardEl = document.getElementById("board");
+      const emptyEl = document.getElementById("empty");
+      const hintEl = document.getElementById("hint");
+      const swatchesEl = document.getElementById("swatches");
+      const tickerEl = document.getElementById("ticker");
+      const stopPressEl = document.getElementById("stopPress");
+      const datelineEl = document.getElementById("dateline");
+      const issueNoEl = document.getElementById("issueNo");
+
+      const BOARD_KEY = "numberGoUp.leaderboard";
+      const ACTIVE_KEY = "numberGoUp.activePlayer";
+
+      // Newspaper-ink palette (same ids — storage-compatible with index.html)
+      const COLORS = [
+        { id: "red",    hex: "#7d1f1c" },
+        { id: "purple", hex: "#3d2a4f" },
+        { id: "blue",   hex: "#1a3a5c" },
+        { id: "green",  hex: "#2a5a35" },
+        { id: "gold",   hex: "#8a6b1f" },
+      ];
+      const DEFAULT_COLOR = "red";
+
+      function colorHex(id) {
+        const c = COLORS.find((x) => x.id === id);
+        return c ? c.hex : COLORS[0].hex;
+      }
+
+      function loadBoard() {
+        try {
+          const raw = localStorage.getItem(BOARD_KEY);
+          if (!raw) return {};
+          const parsed = JSON.parse(raw);
+          return (parsed && typeof parsed === "object") ? parsed : {};
+        } catch {
+          return {};
+        }
+      }
+      function saveBoard(b) { localStorage.setItem(BOARD_KEY, JSON.stringify(b)); }
+      function loadActivePlayer() { return localStorage.getItem(ACTIVE_KEY) || ""; }
+      function saveActivePlayer(name) {
+        if (name) localStorage.setItem(ACTIVE_KEY, name);
+        else localStorage.removeItem(ACTIVE_KEY);
+      }
+
+      let board = loadBoard();
+
+      function getActiveName() { return nameInput.value.trim(); }
+      function getEntry(name) { return board[name] || null; }
+
+      function setEntry(name, count) {
+        const existing = board[name] || {};
+        board[name] = {
+          count,
+          lastActive: Date.now(),
+          color: existing.color || DEFAULT_COLOR,
+        };
+        saveBoard(board);
+      }
+      function setColorForActive(colorId) {
+        const name = getActiveName();
+        if (!name) return;
+        const existing = board[name];
+        if (!existing) board[name] = { count: 0, lastActive: Date.now(), color: colorId };
+        else existing.color = colorId;
+        saveBoard(board);
+      }
+      function colorFor(name) {
+        const entry = board[name];
+        return (entry && entry.color) || DEFAULT_COLOR;
+      }
+      function removeEntry(name) { delete board[name]; saveBoard(board); }
+      function currentCount() {
+        const name = getActiveName();
+        if (!name) return 0;
+        const entry = getEntry(name);
+        return entry ? entry.count : 0;
+      }
+
+      function renderCount() { countEl.textContent = String(currentCount()); }
+
+      function sortedEntries() {
+        return Object.entries(board)
+          .map(([name, entry]) => ({ name, count: entry.count, lastActive: entry.lastActive || 0 }))
+          .sort((a, b) => {
+            if (b.count !== a.count) return b.count - a.count;
+            return b.lastActive - a.lastActive;
+          });
+      }
+
+      function escapeHtml(s) {
+        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      function rowHtml(rank, entry, isActive) {
+        const cls = isActive ? "active" : "";
+        const hex = colorHex(colorFor(entry.name));
+        return `<li class="${cls}" style="--row-color: ${hex}">` +
+          `<span class="rank">${rank}.</span>` +
+          `<span class="dot"></span>` +
+          `<span class="name">${escapeHtml(entry.name)}</span>` +
+          `<span class="score">${entry.count.toLocaleString()}</span>` +
+        `</li>`;
+      }
+
+      function renderLeaderboard() {
+        const entries = sortedEntries();
+        const activeName = getActiveName();
+
+        if (entries.length === 0) {
+          boardEl.innerHTML = "";
+          emptyEl.style.display = "";
+          return;
+        }
+        emptyEl.style.display = "none";
+
+        const top = entries.slice(0, 10);
+        const activeInTop = activeName && top.some((e) => e.name === activeName);
+        const activeEntry = activeName ? entries.find((e) => e.name === activeName) : null;
+        const activeRank = activeEntry ? entries.findIndex((e) => e.name === activeName) + 1 : null;
+
+        let html = top
+          .map((entry, i) => rowHtml(i + 1, entry, entry.name === activeName))
+          .join("");
+
+        if (activeEntry && !activeInTop) {
+          html += `<li class="you-divider"><span></span><span>Your&nbsp;row</span><span></span></li>`;
+          html += rowHtml(activeRank, activeEntry, true);
+        }
+
+        boardEl.innerHTML = html;
+      }
+
+      function updateButtonsEnabled() {
+        const hasName = getActiveName().length > 0;
+        clickBtn.disabled = !hasName;
+        tipBtn.disabled = !hasName;
+        resetBtn.disabled = !hasName;
+        hintEl.textContent = hasName ? "" : "Kindly sign your column above to begin filing.";
+      }
+
+      function renderSwatches() {
+        const hasName = getActiveName().length > 0;
+        const activeColor = hasName ? colorFor(getActiveName()) : null;
+        swatchesEl.innerHTML = COLORS.map((c) => {
+          const sel = c.id === activeColor ? "selected" : "";
+          const dis = hasName ? "" : "disabled";
+          return `<button type="button" class="swatch ${sel}" data-color="${c.id}" style="--c:${c.hex}" ${dis} aria-label="${c.id}"></button>`;
+        }).join("");
+      }
+
+      swatchesEl.addEventListener("click", (e) => {
+        const btn = e.target.closest(".swatch");
+        if (!btn || btn.disabled) return;
+        setColorForActive(btn.dataset.color);
+        renderSwatches();
+        renderLeaderboard();
+        renderTicker();
+      });
+
+      function playAnimation(name) {
+        countEl.classList.remove(name);
+        void countEl.offsetWidth;
+        countEl.classList.add(name);
+      }
+
+      function flashStopPress(headline, subtitle, variant) {
+        if (headline) {
+          stopPressEl.innerHTML = escapeHtml(headline) +
+            (subtitle ? `<span class="verdict-sub">${escapeHtml(subtitle)}</span>` : "");
+        }
+        stopPressEl.classList.remove("flash", "variant-up", "variant-down");
+        if (variant === "up") stopPressEl.classList.add("variant-up");
+        if (variant === "down") stopPressEl.classList.add("variant-down");
+        void stopPressEl.offsetWidth;
+        stopPressEl.classList.add("flash");
+      }
+
+      // Random int in [lo, hi] inclusive
+      function randInt(lo, hi) {
+        return Math.floor(Math.random() * (hi - lo + 1)) + lo;
+      }
+
+      // Insider trading outcomes. Positive-EV but dramatic.
+      const TIP_HEADLINES_GAIN = [
+        "Exclusive!", "Tip Pays Off!", "Hot Wire!",
+        "Sources Confirm!", "Market Moved!",
+      ];
+      const TIP_HEADLINES_LOSS = [
+        "SEC Inquiry!", "Subpoena Served!", "Indicted!",
+        "Regulator Pounces!", "Caught Red-Handed!",
+      ];
+      function pickOne(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+      function renderTicker() {
+        const entries = sortedEntries();
+        if (entries.length === 0) {
+          tickerEl.innerHTML =
+            `<span class="ticker-item"><span class="t-name">Dispatches</span>` +
+            `<span class="t-sep">&middot;</span>` +
+            `<span>the wire is quiet &mdash; be the first to file</span></span>`;
+          return;
+        }
+        const items = entries.slice(0, 12).map((e) => (
+          `<span class="ticker-item">` +
+            `<span class="t-name">${escapeHtml(e.name)}</span>` +
+            `<span class="t-score">${e.count.toLocaleString()}</span>` +
+            `<span class="t-up">&#x25B2;</span>` +
+          `</span>` +
+          `<span class="t-sep">&#x2767;</span>`
+        )).join("");
+        // duplicate for seamless roll
+        tickerEl.innerHTML = items + items;
+      }
+
+      // Dateline: today's date in broadsheet style
+      (function setDateline() {
+        const d = new Date();
+        const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+        const months = ["January","February","March","April","May","June",
+                        "July","August","September","October","November","December"];
+        datelineEl.textContent = `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+        // Issue number = day-of-year, three digits
+        const start = new Date(d.getFullYear(), 0, 0);
+        const diff = (d - start) / 86400000;
+        issueNoEl.textContent = String(Math.floor(diff)).padStart(3, "0");
+      })();
+
+      nameInput.addEventListener("input", () => {
+        saveActivePlayer(getActiveName());
+        updateButtonsEnabled();
+        renderCount();
+        renderSwatches();
+        renderLeaderboard();
+      });
+
+      clickBtn.addEventListener("click", () => {
+        const name = getActiveName();
+        if (!name) return;
+        const entry = getEntry(name);
+        const next = (entry ? entry.count : 0) + 1;
+        setEntry(name, next);
+        renderCount();
+        renderLeaderboard();
+        renderTicker();
+        playAnimation("pulse");
+        // Celebrate round milestones
+        if (next > 0 && (next % 50 === 0)) {
+          flashStopPress("Stop Press!", `${next.toLocaleString()} prints filed`, "up");
+        }
+      });
+
+      tipBtn.addEventListener("click", () => {
+        const name = getActiveName();
+        if (!name) return;
+        const current = currentCount();
+        const caught = Math.random() < 0.3;  // ~30% of tips draw heat
+        let next, delta, variant, headline, subtitle;
+
+        if (!caught) {
+          delta = randInt(8, 24);
+          next = current + delta;
+          variant = "up";
+          headline = pickOne(TIP_HEADLINES_GAIN);
+          subtitle = `+${delta} prints, off the record`;
+          playAnimation("pulse");
+        } else {
+          // Caught: lose up to min(current, 10..20). Floor at 0 — no debtor's prison.
+          const cap = Math.min(current, randInt(10, 20));
+          delta = -cap;
+          next = Math.max(0, current + delta);
+          variant = "down";
+          headline = pickOne(TIP_HEADLINES_LOSS);
+          subtitle = cap === 0
+            ? "no assets to seize"
+            : `${cap} prints redacted from the record`;
+          playAnimation("shake");
+        }
+
+        setEntry(name, next);
+        renderCount();
+        renderLeaderboard();
+        renderTicker();
+        flashStopPress(headline, subtitle, variant);
+      });
+
+      resetBtn.addEventListener("click", () => {
+        const name = getActiveName();
+        if (!name) return;
+        removeEntry(name);
+        renderCount();
+        renderLeaderboard();
+        renderTicker();
+        playAnimation("shake");
+      });
+
+      nameInput.value = loadActivePlayer();
+      updateButtonsEnabled();
+      renderCount();
+      renderSwatches();
+      renderLeaderboard();
+      renderTicker();
+    </script>
+  </body>
+</html>
